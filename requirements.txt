@@ -3,3 +3,9 @@ beautifulsoup4
 google-generativeai
 schedule
 python-dotenv
+flask
+pyTelegramBotAPI
+apscheduler
+pytz
+lxml
+
