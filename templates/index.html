@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Insights Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    
+    <div class="container">
+        <header>
+            <h1 class="glow-text">MARKET PULSE</h1>
+            <p class="subtitle">Live Financial Intelligence Dashboard</p>
+        </header>
+
+        <main>
+            <section class="schedule-panel glass">
+                <h2>Daily Briefing Schedule</h2>
+                <div class="schedule-controls">
+                    <div class="input-group">
+                        <label for="schedule-time">Set Daily Time (IST):</label>
+                        <input type="time" id="schedule-time" value="{{ schedule.time if schedule.active else '09:00' }}">
+                    </div>
+                    <div class="button-group">
+                        <button id="btn-set-schedule" class="btn primary">Set Schedule</button>
+                    </div>
+                </div>
+
+                <div class="interest-controls">
+                    <div class="input-group full-width">
+                        <label for="news-interests">What news do you want? (Keywords):</label>
+                        <input type="text" id="news-interests" value="{{ schedule.interests }}" placeholder="e.g. AI, Stocks, Cricket, Technology">
+                    </div>
+                    <div class="button-group">
+                        <button id="btn-save-interests" class="btn secondary">Save Interests</button>
+                        <button id="btn-send-now" class="btn secondary">Send Now (Test)</button>
+                    </div>
+                </div>
+
+                <div id="schedule-status" class="status-indicator">
+
+                    {% if schedule.active %}
+                    <p class="active">🟢 Active: Every day at {{ schedule.time }} IST</p>
+                    <p class="next-run">Next run: {{ schedule.next_run }}</p>
+                    {% else %}
+                    <p class="inactive">🔴 No schedule set</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="crypto-strip">
+
+                {% for coin, data in crypto.items() %}
+                <div class="crypto-card glass">
+                    <span class="coin-name">{{ coin }}</span>
+                    <span class="coin-price">${{ "{:,.2f}".format(data.price) }}</span>
+                    <span class="coin-change {{ 'up' if (data.change or 0) > 0 else 'down' }}">
+                        {{ "▲" if (data.change or 0) > 0 else "▼" }} {{ "{:.2f}".format(data.change or 0) }}%
+                    </span>
+
+                </div>
+                {% endfor %}
+            </section>
+
+            <div class="grid-content">
+                <section class="news-section glass">
+                    <h2>Latest Market Headlines</h2>
+                    <ul class="news-list">
+                        {% for item in news %}
+                        <li>
+                            <div class="news-indicator"></div>
+                            <p>{{ item }}</p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+
+                <section class="ai-summary glass">
+                    <h2>AI Market Briefing</h2>
+                    <div class="summary-content">
+                        {{ briefing | safe }}
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <p>Last updated: <span id="timestamp">{{ timestamp }}</span></p>
+            <div class="telegram-promo">
+                Type "hi" on Telegram for instant updates!
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Refresh news every 5 minutes
+        setTimeout(() => {
+            window.location.reload();
+        }, 300000);
+
+        // Schedule Handlers
+        document.getElementById('btn-set-schedule').addEventListener('click', async () => {
+            const time = document.getElementById('schedule-time').value;
+            if (!time) return alert("Please select a time");
+
+            try {
+                const response = await fetch('/set-schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ time })
+                });
+                const data = await response.json();
+                alert(data.message);
+                location.reload();
+            } catch (err) {
+                alert("Error setting schedule");
+            }
+        });
+
+        document.getElementById('btn-save-interests').addEventListener('click', async () => {
+            const interests = document.getElementById('news-interests').value;
+            if (!interests) return alert("Please enter some interests");
+
+            try {
+                const response = await fetch('/set-interests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ interests })
+                });
+                const data = await response.json();
+                alert(data.message);
+                location.reload();
+            } catch (err) {
+                alert("Error saving interests");
+            }
+        });
+
+        document.getElementById('btn-send-now').addEventListener('click', async () => {
+
+            const btn = document.getElementById('btn-send-now');
+            btn.disabled = true;
+            btn.innerText = "Sending...";
+            
+            try {
+                const response = await fetch('/send-now', { method: 'POST' });
+                const data = await response.json();
+                alert(data.message);
+            } catch (err) {
+                alert("Error sending briefing");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Send Now (Test)";
+            }
+        });
+    </script>
+
+</body>
+</html>
