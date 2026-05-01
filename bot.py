@@ -20,7 +20,7 @@ class DailyBrieferBot:
 
 
         genai.configure(api_key=gemini_key)
-        self.model = genai.GenerativeModel("gemini-2.5-flash") # Official stable model
+        self.model = genai.GenerativeModel("gemini-1.5-flash") # Official stable model
         self.bot = telebot.TeleBot(telegram_token)
         
         # Initialize Scheduler
